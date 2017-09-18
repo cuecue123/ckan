@@ -2,10 +2,12 @@
 
 import StringIO
 import md5
+import unicodecsv
 
 import pylons
 import ckan.lib.helpers as h
 
+from email.utils import encode_rfc2231
 from ckan.plugins.toolkit import (
     Invalid,
     ObjectNotFound,
@@ -26,6 +28,12 @@ from ckanext.datastore.writer import (
     json_writer,
     xml_writer,
 )
+from ckan.logic import (
+    tuplize_dict,
+    parse_params,
+)
+import ckan.lib.navl.dictization_functions as dict_fns
+from itertools import izip_longest
 
 int_validator = get_validator('int_validator')
 boolean_validator = get_validator('boolean_validator')
@@ -108,16 +116,20 @@ class DatastoreController(BaseController):
         fields = [f for f in rec['fields'] if not f['id'].startswith('_')]
 
         if request.method == 'POST':
+            data = dict_fns.unflatten(tuplize_dict(parse_params(
+                request.params)))
+            info = data.get(u'info')
+            if not isinstance(info, list):
+                info = []
+            info = info[:len(fields)]
             get_action('datastore_create')(None, {
                 'resource_id': resource_id,
                 'force': True,
                 'fields': [{
                     'id': f['id'],
                     'type': f['type'],
-                    'info': {
-                        'label': request.POST.get('f{0}label'.format(i)),
-                        'notes': request.POST.get('f{0}notes'.format(i)),
-                        }} for i, f in enumerate(fields, 1)]})
+                    'info': fi if isinstance(fi, dict) else {}
+                    } for f, fi in izip_longest(fields, info)]})
 
             h.redirect_to(
                 controller='ckanext.datastore.controller:DatastoreController',
@@ -128,3 +140,26 @@ class DatastoreController(BaseController):
         return render(
             'datastore/dictionary.html',
             extra_vars={'fields': fields})
+
+    def dictionary_download(self, resource_id):
+        try:
+            resource_datastore = get_action('datastore_search')(None, {
+                'resource_id': resource_id,
+                'limit': 0})
+        except (ObjectNotFound, NotAuthorized):
+            abort(404, _('Resource not found'))
+
+        fields = [f for f in resource_datastore['fields'] if not f['id'].startswith('_')]
+        header = ['column','type','label','description']
+
+        if hasattr(response, u'headers'):
+            response.headers['Content-Type'] = b'text/csv; charset=utf-8'
+            response.headers['Content-disposition'] = (
+                b'attachment; filename="{name}.csv"'.format(name=resource_id))
+
+        wr = unicodecsv.writer(response, encoding=u'utf-8')
+        wr.writerow(col for col in header)
+        for field in fields:
+            field_info = field.get('info',{})
+            row = [field['id'], field['type'], field_info.get('label',''), field_info.get('notes','')]
+            wr.writerow(item for item in row)

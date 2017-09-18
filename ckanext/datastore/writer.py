@@ -13,11 +13,13 @@ UTF8_BOM = u'\uFEFF'.encode(u'utf-8')
 @contextmanager
 def csv_writer(response, fields, name=None, bom=False):
     u'''Context manager for writing UTF-8 CSV data to response
+
     :param response: file-like or response-like object for writing
         data and headers (response-like objects only)
     :param fields: list of datastore fields
     :param name: file name (for headers, response-like objects only)
     :param bom: True to include a UTF-8 BOM at the start of the file
+
     >>> with csv_writer(response, fields) as d:
     >>>    d.writerow(row1)
     >>>    d.writerow(row2)
@@ -39,11 +41,13 @@ def csv_writer(response, fields, name=None, bom=False):
 @contextmanager
 def tsv_writer(response, fields, name=None, bom=False):
     u'''Context manager for writing UTF-8 TSV data to response
+
     :param response: file-like or response-like object for writing
         data and headers (response-like objects only)
     :param fields: list of datastore fields
     :param name: file name (for headers, response-like objects only)
     :param bom: True to include a UTF-8 BOM at the start of the file
+
     >>> with tsv_writer(response, fields) as d:
     >>>    d.writerow(row1)
     >>>    d.writerow(row2)
@@ -67,11 +71,13 @@ def tsv_writer(response, fields, name=None, bom=False):
 @contextmanager
 def json_writer(response, fields, name=None, bom=False):
     u'''Context manager for writing UTF-8 JSON data to response
+
     :param response: file-like or response-like object for writing
         data and headers (response-like objects only)
     :param fields: list of datastore fields
     :param name: file name (for headers, response-like objects only)
     :param bom: True to include a UTF-8 BOM at the start of the file
+
     >>> with json_writer(response, fields) as d:
     >>>    d.writerow(row1)
     >>>    d.writerow(row2)
@@ -115,11 +121,13 @@ class JSONWriter(object):
 @contextmanager
 def xml_writer(response, fields, name=None, bom=False):
     u'''Context manager for writing UTF-8 XML data to response
+
     :param response: file-like or response-like object for writing
         data and headers (response-like objects only)
     :param fields: list of datastore fields
     :param name: file name (for headers, response-like objects only)
     :param bom: True to include a UTF-8 BOM at the start of the file
+
     >>> with xml_writer(response, fields) as d:
     >>>    d.writerow(row1)
     >>>    d.writerow(row2)
